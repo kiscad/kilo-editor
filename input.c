@@ -2,6 +2,7 @@
 // Created by Chen Chen on 2023/6/13.
 //
 
+#include "data.h"
 #include "terminal.h"
 #include <ctype.h>
 #include <stdio.h>

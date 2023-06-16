@@ -3,6 +3,7 @@
 //
 
 #include "append_buffer.h"
+#include "data.h"
 #include "terminal.h"
 #include <stdio.h>
 #include <string.h>

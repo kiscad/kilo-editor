@@ -2,6 +2,7 @@
 // Created by Chen Chen on 2023/6/12.
 //
 #include "terminal.h"
+#include "data.h"
 #include "error.h"
 #include <ctype.h>
 #include <errno.h>
@@ -132,6 +133,7 @@ int getWindowSize(int *rows, int *cols) {
 void initEditor() {
   E.cx = 0;
   E.cy = 0;
+  E.numrows = 0;
 
   if (getWindowSize(&E.screenrows, &E.screencols) == -1)
     die("getWindowSize");
