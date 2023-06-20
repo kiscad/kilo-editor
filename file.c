@@ -3,8 +3,8 @@
 //
 
 #include "file.h"
-#include "data.h"
 #include "error.h"
+#include "row.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,14 +17,10 @@ void editorOpen(char *filename) {
   size_t linecap = 0;// zero line-capacity cause allocating new memory
   ssize_t linelen;
   linelen = getline(&line, &linecap, fp);
-  if (linelen != -1) {
+  while ((linelen = getline(&line, &linecap, fp)) != -1) {
     while (linelen > 0 && (line[linelen - 1] == '\n' || line[linelen - 1] == '\r'))
       linelen--;
-    E.row.size = linelen;
-    E.row.chars = malloc(linelen + 1);
-    memcpy(E.row.chars, line, linelen);
-    E.row.chars[linelen] = '\0';
-    E.numrows = 1;
+    editorAppendRow(line, linelen);
   }
   free(line);
   fclose(fp);
