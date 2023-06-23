@@ -10,10 +10,13 @@
 typedef struct erow {
   int size;
   char *chars;
+  int rsize;   // length of render string
+  char *render;// the actual chars to draw on screen
 } erow;
 
 struct editorConfig {
-  int cx, cy;
+  int cx, cy;// E.cx is an index into the `chars` field
+  int rx;    // E.rx is and index into the `render` field
   int rowoff;// row offset
   int coloff;// column offset
   int screenrows;
