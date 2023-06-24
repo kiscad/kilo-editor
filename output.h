@@ -6,5 +6,6 @@
 #define KILO_OUTPUT_H
 
 void editorRefreshScreen();
+void editorSetStatusMessage(const char *fmt, ...);
 
-#endif //KILO_OUTPUT_H
+#endif//KILO_OUTPUT_H

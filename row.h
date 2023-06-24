@@ -7,6 +7,7 @@
 
 #include "data.h"
 #include <stdlib.h>
+
 int editorRowCxToRx(erow *row, int cx);
 void editorAppendRow(char *s, size_t len);
 
