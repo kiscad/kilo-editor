@@ -1,5 +1,8 @@
+use clap::Parser;
+use hecto::Config;
 use hecto::Editor;
 
 fn main() {
-  Editor::new().run();
+  let config = Config::parse();
+  Editor::new(config).run();
 }
