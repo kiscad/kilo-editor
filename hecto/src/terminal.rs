@@ -56,7 +56,7 @@ impl Terminal {
   #[must_use]
   pub fn size(&self) -> (usize, usize) {
     let sz = self.inner.size().unwrap();
-    (sz.width as usize, sz.height.saturating_sub(5) as usize)
+    (sz.width as usize, sz.height.saturating_sub(2) as usize)
   }
 
   /// # Errors

@@ -4,6 +4,7 @@ use crate::{row::Row, EdResult};
 
 #[derive(Default)]
 pub struct Document {
+  pub fname: Option<String>,
   rows: Vec<Row>,
 }
 
@@ -11,7 +12,8 @@ impl Document {
   pub fn open(fname: &dyn AsRef<Path>) -> EdResult<Self> {
     let content = fs::read_to_string(fname)?;
     let rows: Vec<_> = content.lines().map(|s| Row::from(s)).collect();
-    Ok(Self { rows })
+    let fname = Some(fname.as_ref().to_string_lossy().to_string());
+    Ok(Self { rows, fname })
   }
 
   pub fn row(&self, index: usize) -> Option<&Row> {

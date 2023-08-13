@@ -1,6 +1,9 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::style::{Color, Print, ResetColor, SetBackgroundColor};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use std::error::Error;
+use std::io;
+use std::time::{Duration, Instant};
 
 use crate::document::Document;
 use crate::row::Row;
@@ -13,6 +16,20 @@ pub struct Position {
   pub y: usize,
 }
 
+struct StatusMessage {
+  text: String,
+  time: Instant,
+}
+
+impl From<String> for StatusMessage {
+  fn from(value: String) -> Self {
+    Self {
+      text: value,
+      time: Instant::now(),
+    }
+  }
+}
+
 #[allow(dead_code)]
 pub struct Editor {
   config: Config,
@@ -21,6 +38,7 @@ pub struct Editor {
   terminal: Terminal,
   cur_pos: Position,
   offset: Position,
+  status_message: StatusMessage,
 }
 
 impl Editor {
@@ -28,10 +46,16 @@ impl Editor {
   pub fn new(config: Config) -> Self {
     let terminal = Terminal::new();
     let cur_pos = Position::default();
-    let document = if let Some(path) = &config.fpath {
-      Document::open(path).unwrap()
+    let (document, init_status) = if let Some(path) = &config.fpath {
+      match Document::open(path) {
+        Ok(doc) => (doc, "HELP: Ctrl-Q = quit".to_string()),
+        Err(_) => (
+          Document::default(),
+          format!("ERR: Could not open file: {}", path.display()),
+        ),
+      }
     } else {
-      Document::default()
+      (Document::default(), "HELP: Ctrl-Q = quit".to_string())
     };
     let offset = Position::default();
 
@@ -42,6 +66,7 @@ impl Editor {
       cur_pos,
       document,
       offset,
+      status_message: init_status.into(),
     }
   }
 
@@ -72,8 +97,8 @@ impl Editor {
       x: self.cur_pos.x - self.offset.x,
       y: self.cur_pos.y - self.offset.y,
     };
-    assert_eq!(self.terminal.inner.get_cursor().unwrap(), (0, 0));
-    // self.terminal.set_cursor(&term_pos)?;
+    // assert_eq!(self.terminal.inner.get_cursor().unwrap(), (0, 0));
+    self.terminal.set_cursor(&term_pos)?;
     if self.should_quit {
       self.terminal.set_cursor(&Position::default())?;
       self.terminal.clear();
@@ -81,6 +106,8 @@ impl Editor {
     } else {
       self.terminal.set_cursor(&Position::default())?;
       self.draw_rows()?;
+      self.draw_status_bar()?;
+      self.draw_message_bar()?;
       self.terminal.set_cursor(&term_pos)?;
     }
     self.terminal.show_cursor()?;
@@ -205,6 +232,45 @@ impl Editor {
       } else {
         println!("~\r");
       }
+    }
+    Ok(())
+  }
+
+  fn draw_status_bar(&mut self) -> EdResult<()> {
+    // let spaces = " ".repeat(self.terminal.size().0);
+    let fname = self
+      .document
+      .fname
+      .as_ref()
+      .map_or("[No Name]".to_string(), |name| {
+        let mut name = name.clone();
+        name.truncate(20);
+        format!("[{}]", name)
+      });
+    let line_indicator = format!(
+      "{}/{}",
+      self.cur_pos.y.saturating_add(1),
+      self.document.len()
+    );
+    let status = format!("{} - {}", fname, line_indicator);
+    let tail = " ".repeat(self.terminal.size().0.saturating_sub(status.len()));
+    let status = status + &tail;
+    crossterm::queue!(
+      io::stdout(),
+      SetBackgroundColor(Color::Blue),
+      Print(format!("{status}\r\n")),
+      ResetColor,
+    )?;
+    Ok(())
+  }
+
+  fn draw_message_bar(&mut self) -> EdResult<()> {
+    self.terminal.clear_current_line()?;
+    let msg = &self.status_message;
+    if Instant::now() - msg.time < Duration::new(5, 0) {
+      let mut text = msg.text.clone();
+      text.truncate(self.terminal.size().0);
+      print!("{text}");
     }
     Ok(())
   }
